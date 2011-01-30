@@ -28,7 +28,8 @@ public class Aiu {
   public UserRow getNextUserRow() {
     if (rows == null) {
   rows = [new UserRow(fname: "Abel", lname: "Alvarez"),
-                  new UserRow(fname: "Tarver", lname: "Tawnee")].iterator()
+          new UserRow(fname: "Figglestein", lname: "Trogdar"),
+          new UserRow(fname: "Tarver", lname: "Tawnee")].iterator()
     }
     rows.hasNext() ? rows.next() : null
   }

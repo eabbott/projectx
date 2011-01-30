@@ -38,9 +38,10 @@ public SwingBuilder build() {
               constraints: BorderLayout.SOUTH, dividerLocation:100) {
           panel(id: "controlPanel") {
             tableLayout(cellpadding: 3) { 
-              tr { td {
-                label("Assignment Name: "+ assignmentName)
-              } }
+              tr {
+                td { label("Assignment Name: ") }
+                td { label(assignmentName) }
+              }
               tr {
                 td { label(" Name: ") }
                 td { label(id: "userNameLabel", text: "") }
@@ -48,12 +49,15 @@ public SwingBuilder build() {
               tr {
                 td(id: "fileChooser") {
                   panel {
-                   button(id: "fileNameLabel", text:'Record Grade',
-                     actionPerformed: {projX.populateGuiWithNextUser(false)})
+                    button(id: "fileNameLabel", text:'Record Grade',
+                      actionPerformed: {projX.populateGuiWithNextUser(false)})
                   }
                 }
-                td { button(text:'Skip User',
-                     actionPerformed: {projX.populateGuiWithNextUser(true)})
+                td(id: "skipUserPanel") {
+                  panel {
+                    button(text:'Skip User',
+                      actionPerformed: {projX.populateGuiWithNextUser(true)})
+                  }
                 }
               }
             }

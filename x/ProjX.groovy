@@ -8,13 +8,15 @@ def assignment
 def listScores
 Aiu aiu
 def files
+def userFileNames
+def fileToGrade
 UserRow currentUser
 
 def scoreGui
 def swing
 def userNameLabel
-def fileNameLabel
 def fileChooser
+def skipUserPanel
 def fileText
 def toggles
 
@@ -38,8 +40,8 @@ public void main(String[] args) {
   scoreGui = new ScoreGui(this, listScores, assignment.assignmentName)
   swing = scoreGui.build()
   userNameLabel = swing.getVariable("userNameLabel")
-  fileNameLabel = swing.getVariable("fileNameLabel")
   fileChooser = swing.getVariable("fileChooser")
+  skipUserPanel = swing.getVariable("skipUserPanel")
   fileText = swing.getVariable("fileText")
   toggles = swing.getVariable("toggles")
 
@@ -54,44 +56,90 @@ public void populateGuiWithNextUser(boolean skipUser) {
   currentUser = aiu.getNextUserRow()
   if (!currentUser) {
     // put in finish button or something
-    userNameLabel.text = "finished"
-    fileNameLabel.text = "finished"
+    userNameLabel.text = ""
+    fileText.text = "Perhaps roll through scores here"
+    def finishPanel = swing.button(text: "Post Grades", actionPerformed: {postGrades()})
+    fileChooser.getComponent().removeAll()
+    fileChooser.getComponent().add(finishPanel)
+    finishPanel.setVisible(true)
+    def blankPanel = swing.label("")
+    skipUserPanel.getComponent().removeAll()
+    skipUserPanel.getComponent().add(blankPanel)
+    blankPanel.setVisible(true)
+    scoreGui.show()
     return
   }
 
-  def userFiles = getFileNames(files, currentUser.fname, currentUser.lname)
+  userFileNames = getFileNames(files, currentUser.fname, currentUser.lname)
   userNameLabel.text = currentUser.fname +" "+ currentUser.lname
-  //fileNameLabel.text = userFiles ? userFiles.collect({def s=it.split(File.separator);s[s.size()-1]}).join(" ") : "NONE"
-  def txt = userFiles ? userFiles.collect({def s=it.split(File.separator);s[s.size()-1]}).join(" ") : "NONE"
-  //fileChooser.component = swing.panel { label(text: txt) }
-  def newPanel = swing.label(text: txt)
+  assignment.clearScores()
+  listScores.eachWithIndex { ScoreDefinition score, int i ->
+    toggles[i].selected = false
+  }
+  fileText.text = ""
+  fileToGrade = null
+
+  // If 0 files, only allow skipping the user
+  def newPanel
+  if (!userFileNames) {
+    newPanel = swing.label("Assignment not found")
+  } else if (userFileNames.size() == 1) {
+    fileToGrade = userFileNames[0]
+    autoGrade()
+    newPanel = swing.panel {
+      label(getShortFileName(userFileNames[0]))
+      button(text: "Record Grade", actionPerformed: {recordGrade()})
+    }
+  } else {
+    def items = ["Select a file to grade"]
+    items.addAll(userFileNames.collect{getShortFileName(it)})
+    newPanel = swing.panel {
+      comboBox(items: items,
+        actionPerformed: {
+          def name = it.getSource().getSelectedItem()
+          fileToGrade = userFileNames.find{it.endsWith(name)}
+          autoGrade()
+        })
+      button(text: "Record", actionPerformed: {recordGrade()})
+    }
+  }
   fileChooser.getComponent().removeAll()
   fileChooser.getComponent().add(newPanel)
   newPanel.setVisible(true)
   scoreGui.show()
-  assignment.clearScores()
-  if (userFiles) {
-    assignment.grade(userFiles[0])
+}
+
+  def recordGrade() {
+    if (fileToGrade) {
+      populateGuiWithNextUser(false)
+    }
+  }
+
+  def autoGrade() {
+    assignment.grade(fileToGrade)
     fileText.text = assignment.displayText
+    listScores.eachWithIndex { ScoreDefinition score, int i ->
+      toggles[i].selected = score.enabled
+    }
   }
-  listScores.eachWithIndex { ScoreDefinition score, int i ->
-    toggles[i].selected = score.enabled
-  }
-}
 
-def processCurrentUser() {
-  currentUser?.setScore(assignment.maxScore - (listScores.findAll({it.enabled})*.score.sum()))
-  currentUser?.setComments(listScores.findAll({it.enabled})*.text.join(" "))
-  println "processing current user: "+ listScores
-}
-
-def getAssignment(String assign) {
-  switch(assign) {
-    case "1": return new Assignment1()
-    case "2": return new Assignment2()
+  def processCurrentUser() {
+    currentUser?.setScore(assignment.maxScore - (listScores.findAll({it.enabled})*.score.sum()))
+    currentUser?.setComments(listScores.findAll({it.enabled})*.text.join(" "))
+    println "processing current user: "+ listScores
   }
-  return null
-}
+
+  def postGrades() {
+    println "we are finished, post those grades"
+  }
+
+  def getAssignment(String assign) {
+    switch(assign) {
+      case "1": return new Assignment1()
+      case "2": return new Assignment2()
+    }
+    return null
+  }
 
 def processDownload(String scratchDirName, String zipFileName) {
   def files = []
@@ -101,7 +149,9 @@ def processDownload(String scratchDirName, String zipFileName) {
   def zipFile = new java.util.zip.ZipFile(new File(zipFileName))
 
   zipFile.entries().each {
-    File file = new File(scratchDirName + File.separator + it.name.split(File.separator)[0])
+    File file = new File(scratchDirName + File.separator +
+        it.name.split(File.separator == "\\" ?
+	     File.separator + File.separator : File.separator)[0])
     file.mkdir()
     file = new File(scratchDirName + File.separator + it.name)
     files << file.absolutePath
@@ -115,4 +165,21 @@ def processDownload(String scratchDirName, String zipFileName) {
           findAll({ it.toLowerCase().indexOf(lname.toLowerCase()) > -1 })
   }
 
+  def getShortFileName(String fullName) {
+    //def fn = fullName.split(File.separator) -- split() bites it on \
+    int i = fullName.lastIndexOf(File.separator)
+    i != -1 ? fullName.substring(i+1) : fullName
+  }
+
+  def getShrunkenFileName(String fullName) {
+    //def fn = fullName.split(File.separator) -- split() bites it on \
+    int i = fullName.lastIndexOf(File.separator)
+    String name = i == -1 ? "no file name" : fullName.substring(i+1)
+    name.length() < 50 ? name : name.substring(0,20) +" ... "+
+         name.substring(name.length() - 20, name.length())
+  }
+
+  def gradeSelectedAssignment(String label) {
+    println("grade - "+ label)
+  }
 }
