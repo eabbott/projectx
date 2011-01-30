@@ -1,5 +1,6 @@
 package x
 import groovy.swing.SwingBuilder
+import java.util.zip.ZipEntry
 
 public class ProjX {
 
@@ -144,18 +145,23 @@ public void populateGuiWithNextUser(boolean skipUser) {
 def processDownload(String scratchDirName, String zipFileName) {
   def files = []
   def scratchDir = new File(scratchDirName)
-  scratchDir.deleteDir()
+  if (scratchDir.exists()) {
+    scratchDir.deleteDir()
+  }
   scratchDir.mkdir()
   def zipFile = new java.util.zip.ZipFile(new File(zipFileName))
 
-  zipFile.entries().each {
-    File file = new File(scratchDirName + File.separator +
-        it.name.split(File.separator == "\\" ?
-	     File.separator + File.separator : File.separator)[0])
-    file.mkdir()
-    file = new File(scratchDirName + File.separator + it.name)
-    files << file.absolutePath
-    new FileOutputStream(file).write(zipFile.getInputStream(it).getBytes())
+  zipFile.entries().each { ZipEntry entry ->
+    if (entry.isDirectory()) {
+      mkdirIfDoesntExist(scratchDirName, entry.name)
+    } else {
+      mkdirIfDoesntExist(scratchDirName,
+          entry.name.split(File.separator == "\\" ?
+	       File.separator + File.separator : File.separator)[0])
+      File file = new File(scratchDirName + File.separator + entry.name)
+      files << file.absolutePath
+      new FileOutputStream(file).write(zipFile.getInputStream(entry).getBytes())
+    }
   }
   files
 }
@@ -182,4 +188,12 @@ def processDownload(String scratchDirName, String zipFileName) {
   def gradeSelectedAssignment(String label) {
     println("grade - "+ label)
   }
+
+  def mkdirIfDoesntExist(String scratchDirName, String name) {
+    File dir = new File(scratchDirName + File.separator + name)
+    if (!dir.exists()) {
+      dir.mkdir()
+    }
+  }
+
 }

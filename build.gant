@@ -1,0 +1,16 @@
+includeTool << gant.tools.Execute
+setDefaultTarget('package')
+version = "0.8"
+buildDir = "projectx-$version"
+zipfilename = "projectx-$version"+ '.zip'
+
+target ( package : 'Create the .zip to send to Scott' ) {
+  println ( 'Creating zip' )
+  delete(file: zipfilename)
+  mkdir(dir: buildDir)
+  execute.shell ( './generateBat.sh' )
+  execute.shell ( "cp -r testweb.sh download.zip projx.groovy x lib runprojx.bat dict $buildDir" )
+  //execute.shell ( "cp -r projx.groovy x lib runprojx.bat dict $buildDir" )
+  execute.shell ( "zip -r $zipfilename $buildDir" )
+}
+
