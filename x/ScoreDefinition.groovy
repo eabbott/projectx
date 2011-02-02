@@ -12,7 +12,7 @@ class ScoreDefinition extends Observable {
   }
 
   String toString() {
-    "score="+ score +", enabled="+ enabled +", text="+ text +"\n"
+    "score="+ score +", enabled="+ enabled +", text="+ text
   }
 
   public void runAction() {

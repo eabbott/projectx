@@ -1,4 +1,6 @@
-package x
+package x.assignments
+import x.ScoreDefinition
+import x.ScoringTemplate
 
 public class Assignment2 extends ScoringTemplate {
   String assignmentName = "Unit 2 Individual Project"

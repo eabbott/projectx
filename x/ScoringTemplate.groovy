@@ -60,7 +60,7 @@ public abstract class ScoringTemplate {
   }
 
   public boolean referencesSorted() {
-    references != references.sort()
+    references == references.sort()
   }
 
   public boolean checkForProhibitedSites() {
@@ -120,8 +120,7 @@ public abstract class ScoringTemplate {
     StringBuffer dsb = new StringBuffer(32*1024)
     doc.getParagraphs().each {
       dsb.append(it.getParagraphText()).append("\n")
-      if (it.getParagraphText()?.trim()?.equalsIgnoreCase("references") ||
-          it.getParagraphText()?.trim()?.equalsIgnoreCase("references:")) {
+      if (isStartOfReferences(it.getParagraphText()?.trim())) {
         inReferences = true
       } else if (inReferences) {
         references << it.getParagraphText()?.trim()
@@ -138,14 +137,14 @@ public abstract class ScoringTemplate {
     //println "Opening file: $filename"
     def fs = new POIFSFileSystem(new FileInputStream(filename));
     HWPFDocument doc = new HWPFDocument(fs);
-    displayText = doc.getText()
+    displayText = doc.getRange().text()
     org.apache.poi.hwpf.usermodel.Range range = doc.getRange();
 
     boolean inReferences = false
     StringBuffer sb = new StringBuffer(32*1024)
     for (int i=0; i < range.numParagraphs(); i++) {
       String text = range.getParagraph(i).text()
-      if (text?.trim()?.equalsIgnoreCase("references")) {
+      if (startOfReferences(text?.trim())) {
         inReferences = true
       } else if (inReferences) {
         references << text?.trim()
@@ -169,5 +168,9 @@ public abstract class ScoringTemplate {
       return words.find() { word.indexOf(it) != -1 }
     }
     return val != null
+  }
+
+  boolean isStartOfReferences(String text) {
+    text?.equalsIgnoreCase("references") || text?.equalsIgnoreCase("references:")
   }
 }

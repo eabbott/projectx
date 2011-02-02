@@ -4,6 +4,7 @@ version = "0.8"
 buildDir = "projectx-$version"
 zipfilename = "projectx-$version"+ '.zip'
 
+
 target ( package : 'Create the .zip to send to Scott' ) {
   println ( 'Creating zip' )
   delete(file: zipfilename)
@@ -13,4 +14,19 @@ target ( package : 'Create the .zip to send to Scott' ) {
   //execute.shell ( "cp -r projx.groovy x lib runprojx.bat dict $buildDir" )
   execute.shell ( "zip -r $zipfilename $buildDir" )
 }
+
+
+
+
+//path(id:"classpath") {
+//  fileset(dir:"lib")
+//} 
+
+//target ( compile : 'compile a .jar' ) {
+//  taskdef ( name : 'groovyc' , classname : 'org.codehaus.groovy.ant.Groovyc' , classpathref : "classpath" )
+//  groovyc ( srcdir : "x" , destdir : "x" , fork : 'false' ,
+//            failonerror : 'true', includeantruntime : 'true',
+//            classpathref: "classpath") {
+//  }
+//}
 

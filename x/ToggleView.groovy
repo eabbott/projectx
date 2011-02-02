@@ -11,7 +11,6 @@ class ToggleView extends JToggleButton implements Observer {
     }
 
     public void update(Observable o, Object flag) {
-println("this has been updated")
       selected = flag
     }
 }

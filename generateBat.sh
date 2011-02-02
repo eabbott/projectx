@@ -1,1 +1,1 @@
-echo groovy -cp `ls lib/* | awk '{ ORS=";"; print }'`. projx %1 > runprojx.bat
+echo groovy -cp `ls lib/* | awk '{ ORS=";"; print }'`. projx %1 %2 > runprojx.bat

@@ -2,10 +2,6 @@ package x
 
 import com.gargoylesoftware.htmlunit.WebClient
 import com.gargoylesoftware.htmlunit.html.*
-import com.gargoylesoftware.htmlunit.html.HtmlElement
-import com.gargoylesoftware.htmlunit.html.HtmlForm
-import com.gargoylesoftware.htmlunit.html.HtmlPage
-import com.gargoylesoftware.htmlunit.html.HtmlTextInput
 
 public class Aiu {
 
@@ -13,6 +9,7 @@ public class Aiu {
   String password = "aiu4free!"
   String loginUrl = "https://mycampus.aiu-online.com/Home/pages/login.aspx?ReturnUrl=/"
   String assignment
+  String course
   String zipFile = "download.zip"
 
   WebClient web
@@ -23,19 +20,25 @@ public class Aiu {
   HtmlForm form
   def tags
 
-  Iterator rows
+  def userRows
+  int currentUserRow
 
   public UserRow getNextUserRow() {
-    if (rows == null) {
-  rows = [new UserRow(fname: "Abel", lname: "Alvarez"),
+    return currentUserRow < userRows?.size() ?
+               userRows[currentUserRow++] : null
+    /*
+    userRows = [new UserRow(fname: "Abel", lname: "Alvarez"),
           new UserRow(fname: "Figglestein", lname: "Trogdar"),
           new UserRow(fname: "Tarver", lname: "Tawnee")].iterator()
-    }
     rows.hasNext() ? rows.next() : null
+    */
   }
 
-  public void downloadZip() {
+  public void postAllGrades() {
+    println "we are finished, posting those grades"
+  }
 
+  public void navigateToGradingPage() {
     web = new WebClient()
     web.setThrowExceptionOnScriptError(false)
 
@@ -54,22 +57,34 @@ public class Aiu {
     page = select.setSelectedAttribute(option, true)
     page = (form.getElementsByTagName("input").find
                  { it.getAttribute("value") == "Select" }).click()
+  }
 
+  public void downloadZip() {
     anchor = page.getAnchorByText("Download All Files")
     def downloadedPage = anchor.click()
     new FileOutputStream(zipFile).write(downloadedPage.getInputStream().getBytes())
   }
 
-  public void rollingThroughUsers() {
-    println "Printing stuff"
+  public void loadUserRows() {
+    userRows = []
+    currentUserRow = 0
+    println "Starting to load UserRow data"
+    //page.save(new File("grades.html"))
     def rows = page.getByXPath("//table[@class='table2']/tbody/tr")
-    //def rows = page.getByXPath("//table[@class='table2']/tbody/tr/td[@align='left']")
-    rows.each { println "class="+ it.getClass().name +", rows=$it" }
-
-    // 1) Download the file
-    // 2) Score it, hash of user to score
-    // 3) Roll through users, setting score + comments
-    // 4) submit page
+    rows.each { HtmlTableRow row ->
+      // test if this is a user row
+      def cells = row.getCells()
+      def inputs = cells?.size() > 3 ? cells[3]?.getElementsByTagName("input") : null
+      if (inputs) {
+        UserRow userRow = new UserRow(row.getCell(0).getTextContent())
+        // 4 is grade, 5 is comment
+        userRow.scoreInput = inputs[0]
+        userRow.commentInput = row.getCell(4).getElementsByTagName("input")[0]
+        if (userRow.isValid()) {
+          userRows << userRow
+        }
+      }
+    }
 
     //web.closeAllWindows()
   }
@@ -101,34 +116,12 @@ public class Aiu {
     tags = mainPage.getAnchors()
     HtmlElement courseLink
     tags?.each { HtmlElement tag ->
-      if (tag.getAttribute("id").endsWith("_CodeHL")) {
+      // roll through the tags, finding the link for this course
+      if (tag.getAttribute("id").endsWith("_CodeHL") &&
+              course.equals(tag.getTextContent())) {
         courseLink = tag
       }
     }
     courseLink?.click()
   }
-
-  public List testingstuff() {
-    WebClient web = new WebClient()
-    HtmlPage loginPage = web.getPage("http://www.wired.com")
-    println "page="+ loginPage.toString()
-    HtmlForm form = loginPage.getFormByName("search")
-    def tags = form.getElementsByTagName("input")
-    tags?.each {
-      println "tag $it.nodeName: "+ it.getAttribute("name") + it.toString()
-    }
-
-    HtmlTextInput textField = form.getInputByName("query");
-
-    // Change the value of the text field
-    textField.setValueAttribute("fish legs");
-
-    def submit = form.getElementById("gs_submit");
-    HtmlPage page2 = submit.click();
-    println "page2 = "+ page2.toString()
-
-    web.closeAllWindows()
-    []
-  }
-
 }

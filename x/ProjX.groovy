@@ -1,11 +1,12 @@
 package x
 import groovy.swing.SwingBuilder
 import java.util.zip.ZipEntry
+import x.assignments.*
 
 public class ProjX {
 
 String scratchDirName = "scratch"
-def assignment
+def assignment, course
 def listScores
 Aiu aiu
 def files
@@ -23,17 +24,24 @@ def toggles
 
 public void main(String[] args) {
 
-  if (args.length != 1) {
-    println ("pass the assignment number in as an argument such as 'runfile.bat 1'")
+  if (args.length != 2) {
+    println ("1st arg is course (eg BUS230-1005B-37), 2nd is the assignment file name: ie 'runprojx.bat BUS230-1005B-37 Assignment1'")
     System.exit(0)
   }
 
-  assignment = getAssignment(args[0])
+  course = args[0]
+  // have to compile for this to work
+  //assignment = Class.forName(args[1]).newInstance()
+  // can't do this one either...class is diff classloader and won't work in java
+  //assignment = Eval.me("new x.assignments."+ args[1] +"()")
+  assignment = new Assignment4()
   listScores = assignment.getScoreDefinitions()
 
   // This will download the file and leave the thinger open
-  aiu = new Aiu(assignment: assignment.assignmentName)
-  //aiu.downloadZip()
+  aiu = new Aiu(course: course, assignment: assignment.assignmentName)
+  aiu.navigateToGradingPage()
+  aiu.loadUserRows()
+  aiu.downloadZip()
 
   files = processDownload(scratchDirName, aiu.zipFile)
 
@@ -58,7 +66,14 @@ public void populateGuiWithNextUser(boolean skipUser) {
   if (!currentUser) {
     // put in finish button or something
     userNameLabel.text = ""
-    fileText.text = "Perhaps roll through scores here"
+
+    // show the scores
+    StringBuffer sb = new StringBuffer(16*1024)
+    aiu.userRows?.each {
+      sb.append(it.scoreSummary()).append("\n")
+    }
+    fileText.text = sb.toString()
+
     def finishPanel = swing.button(text: "Post Grades", actionPerformed: {postGrades()})
     fileChooser.getComponent().removeAll()
     fileChooser.getComponent().add(finishPanel)
@@ -122,6 +137,12 @@ public void populateGuiWithNextUser(boolean skipUser) {
     listScores.eachWithIndex { ScoreDefinition score, int i ->
       toggles[i].selected = score.enabled
     }
+    int userScore = listScores.findAll({it.enabled})*.score.sum()
+    if (userScore == 0) {
+      toggles[toggles.size()-1].selected = true
+    } else if (userScore < 26) {
+      toggles[toggles.size()-2].selected = true
+    }
   }
 
   def processCurrentUser() {
@@ -131,15 +152,7 @@ public void populateGuiWithNextUser(boolean skipUser) {
   }
 
   def postGrades() {
-    println "we are finished, post those grades"
-  }
-
-  def getAssignment(String assign) {
-    switch(assign) {
-      case "1": return new Assignment1()
-      case "2": return new Assignment2()
-    }
-    return null
+    aiu.postAllGrades()
   }
 
 def processDownload(String scratchDirName, String zipFileName) {
