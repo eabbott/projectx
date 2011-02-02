@@ -35,7 +35,7 @@ public class Aiu {
   }
 
   public void postAllGrades() {
-    println "we are finished, posting those grades"
+    println "we are finished. not yet auto-posting grades though "
   }
 
   public void navigateToGradingPage() {

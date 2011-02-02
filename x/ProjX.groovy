@@ -134,21 +134,23 @@ public void populateGuiWithNextUser(boolean skipUser) {
   def autoGrade() {
     assignment.grade(fileToGrade)
     fileText.text = assignment.displayText
+
+    // first set the special scores
+    def pointsOff = getPointsOff(listScores)
+    if (!pointsOff) {
+      listScores[listScores.size()-1].enabled = true
+    } else if (pointsOff < 26) {
+      listScores[listScores.size()-2].enabled = true
+    }
+
     listScores.eachWithIndex { ScoreDefinition score, int i ->
       toggles[i].selected = score.enabled
-    }
-    int userScore = listScores.findAll({it.enabled})*.score.sum()
-    if (userScore == 0) {
-      toggles[toggles.size()-1].selected = true
-    } else if (userScore < 26) {
-      toggles[toggles.size()-2].selected = true
     }
   }
 
   def processCurrentUser() {
-    currentUser?.setScore(assignment.maxScore - (listScores.findAll({it.enabled})*.score.sum()))
+    currentUser?.setScore(assignment.maxScore - getPointsOff(listScores))
     currentUser?.setComments(listScores.findAll({it.enabled})*.text.join(" "))
-    println "processing current user: "+ listScores
   }
 
   def postGrades() {
@@ -209,4 +211,8 @@ def processDownload(String scratchDirName, String zipFileName) {
     }
   }
 
+  def getPointsOff(def scores) {
+    def pointsOff = scores.findAll({it.enabled})*.score.sum()
+    pointsOff ? pointsOff : 0
+  }
 }

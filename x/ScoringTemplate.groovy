@@ -113,7 +113,6 @@ public abstract class ScoringTemplate {
   }
 
   def parseXml(String filename) {
-    //println "Opening file: $filename"
     XWPFDocument doc = new XWPFDocument(new FileInputStream(filename));
     boolean inReferences = false
     StringBuffer sb = new StringBuffer(32*1024)
@@ -134,7 +133,6 @@ public abstract class ScoringTemplate {
   }
 
   def parseDoc(String filename) {
-    //println "Opening file: $filename"
     def fs = new POIFSFileSystem(new FileInputStream(filename));
     HWPFDocument doc = new HWPFDocument(fs);
     displayText = doc.getRange().text()
@@ -144,7 +142,7 @@ public abstract class ScoringTemplate {
     StringBuffer sb = new StringBuffer(32*1024)
     for (int i=0; i < range.numParagraphs(); i++) {
       String text = range.getParagraph(i).text()
-      if (startOfReferences(text?.trim())) {
+      if (isStartOfReferences(text?.trim())) {
         inReferences = true
       } else if (inReferences) {
         references << text?.trim()
