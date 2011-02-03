@@ -170,9 +170,7 @@ def processDownload(String scratchDirName, String zipFileName) {
     if (entry.isDirectory()) {
       mkdirIfDoesntExist(scratchDirName, entry.name)
     } else {
-      mkdirIfDoesntExist(scratchDirName,
-          entry.name.split(File.separator == "\\" ?
-	       File.separator + File.separator : File.separator)[0])
+      mkdirIfDoesntExist(scratchDirName, entry.name.split("/")[0])
       File file = new File(scratchDirName + File.separator + entry.name)
       files << file.absolutePath
       new FileOutputStream(file).write(zipFile.getInputStream(entry).getBytes())

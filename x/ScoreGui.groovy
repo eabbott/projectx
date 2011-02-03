@@ -35,8 +35,8 @@ public SwingBuilder build() {
   mainFrame = swing.frame(title:'Project X', size: [900, 600],
       defaultCloseOperation:JFrame.EXIT_ON_CLOSE, pack:true, show:true) {
         splitPane(orientation:JSplitPane.VERTICAL_SPLIT,
-              constraints: BorderLayout.SOUTH, dividerLocation:100) {
-          panel(id: "controlPanel") {
+              constraints: BorderLayout.NORTH, dividerLocation:100) {
+          panel(constraints: "bottom", id: "controlPanel") {
             tableLayout(cellpadding: 3) { 
               tr {
                 td { label("Assignment Name: ") }

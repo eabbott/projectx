@@ -1,6 +1,6 @@
 includeTool << gant.tools.Execute
 setDefaultTarget('package')
-version = "0.8"
+version = "0.9"
 buildDir = "projectx-$version"
 zipfilename = "projectx-$version"+ '.zip'
 
