@@ -16,14 +16,12 @@ class UserRow {
   }
 
   void setScore(int score) {
-    println ("setting score=$score")
     if (scoreInput) {
       scoreInput.setValueAttribute(String.valueOf(score))
     }
   }
 
   void setComments(String comments) {
-    println ("setting comments=$comments")
     if (commentInput) {
       commentInput.setValueAttribute(comments)
     }
