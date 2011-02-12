@@ -47,6 +47,10 @@ class UserRow {
     currentScore != null && currentScore != ""
   }
 
+  boolean hasNonZeroScore() {
+    hasCurrentScore() && currentScore != "0"
+  }
+
   String toString() {
     fname +" "+ lname +": "+ isValid() +"["+
         (currentScore ? currentScore : "") +"] "+

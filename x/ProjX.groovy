@@ -49,7 +49,7 @@ def continueWithArguments() {
   //if (true) return
 
   // This will download the file and leave the thinger open
-  aiu = new Aiu(course: course, assignment: assignment.assignmentName)
+  aiu = new Aiu(course: course, assignment: assignment)
   aiu.navigateToGradingPage()
   if (aiu.notOnGradingPage) {
     System.exit(0)

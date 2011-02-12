@@ -8,7 +8,7 @@ public class Aiu {
   String username = "scott.krawitz"
   String password = "aiu4free!"
   String loginUrl = "https://mycampus.aiu-online.com/Home/pages/login.aspx?ReturnUrl=/"
-  String assignment
+  def assignment
   String course
   String zipFile = "download.zip"
   boolean notOnGradingPage
@@ -25,14 +25,13 @@ public class Aiu {
   int currentUserRow
 
   public UserRow getNextUserRow() {
+    if (assignment.gradingLateAssignments) {
+      while (currentUserRow < userRows?.size() && userRows[currentUserRow].hasNonZeroScore())
+        { currentUserRow++ }
+    }
+
     return currentUserRow < userRows?.size() ?
-               userRows[currentUserRow++] : null
-    /*
-    userRows = [new UserRow(fname: "Abel", lname: "Alvarez"),
-          new UserRow(fname: "Figglestein", lname: "Trogdar"),
-          new UserRow(fname: "Tarver", lname: "Tawnee")].iterator()
-    rows.hasNext() ? rows.next() : null
-    */
+             userRows[currentUserRow++] : null
   }
 
   public void postAllGrades() {
@@ -57,7 +56,7 @@ public class Aiu {
     page = anchor.click()
     form = page.getFormByName("aspnetForm")
     HtmlSelect select = form.getElementsByTagName("select")[0]
-    HtmlOption option = select.getOptionByText(assignment)
+    HtmlOption option = select.getOptionByText(assignment.assignmentName)
     option.setSelected(true)
     page = select.setSelectedAttribute(option, true)
     page = (form.getElementsByTagName("input").find
