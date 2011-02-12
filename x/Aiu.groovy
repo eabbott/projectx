@@ -11,6 +11,7 @@ public class Aiu {
   String assignment
   String course
   String zipFile = "download.zip"
+  boolean notOnGradingPage
 
   WebClient web
   HtmlPage page
@@ -47,6 +48,10 @@ public class Aiu {
 
     page = gotoCoursePageFromMainPage(
         page.getFrameByName("MainFrame").getEnclosedPage())
+    if (!page) {
+      notOnGradingPage = true
+      return
+    }
 
     anchor = page.getAnchorByText("Post Grades by Assignment")
     page = anchor.click()
@@ -113,14 +118,21 @@ public class Aiu {
   }
 
   HtmlPage gotoCoursePageFromMainPage(HtmlPage mainPage) {
+    def courses = []
     tags = mainPage.getAnchors()
     HtmlElement courseLink
     tags?.each { HtmlElement tag ->
       // roll through the tags, finding the link for this course
-      if (tag.getAttribute("id").endsWith("_CodeHL") &&
-              course.equals(tag.getTextContent())) {
-        courseLink = tag
+      if (tag.getAttribute("id").endsWith("_CodeHL")) {
+        courses << tag.getTextContent()
+        if (course.equals(tag.getTextContent())) {
+          courseLink = tag
+        }
       }
+    }
+    if (!courseLink) {
+      println("The course requested ("+ course +") could not be found.")
+      println("The courses found were as follows: "+ courses)
     }
     courseLink?.click()
   }

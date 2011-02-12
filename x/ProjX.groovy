@@ -15,32 +15,50 @@ def fileToGrade
 UserRow currentUser
 
 def scoreGui
+def argsGui
 def swing
 def userNameLabel
 def fileChooser
 def skipUserPanel
 def fileText
 def toggles
+def assignments = ["Assignment1","Assignment2","Assignment3","Assignment4","Assignment5"]
+def lastCourseChosen
 
 public void main(String[] args) {
 
-  if (args.length != 2) {
-    println ("1st arg is course (eg BUS230-1005B-37), 2nd is the assignment file name: ie 'runprojx.bat BUS230-1005B-37 Assignment1'")
-    System.exit(0)
-  }
+  lastCourseChosen = loadLastCourseChosen()
+  argsGui = new ArgsGui(this, lastCourseChosen, assignments)
+  swing = argsGui.build()
+  argsGui.show()
+}
 
-  course = args[0]
-  // have to compile for this to work
-  //assignment = Class.forName(args[1]).newInstance()
-  // can't do this one either...class is diff classloader and won't work in java
-  //assignment = Eval.me("new x.assignments."+ args[1] +"()")
-  assignment = new Assignment4()
+def continueWithArguments() {
+  course = swing.getVariable("course")?.text
+  recordCourseIfDifferent(course, lastCourseChosen)
+  def assignmentString = swing.getVariable("assignmentChooser")?.selectedItem
+  def gradingLateAssignments = swing.getVariable("late")?.selected
+  argsGui.close()
+
+  assignment = chooseAssignment(assignmentString)
   listScores = assignment.getScoreDefinitions()
+  assignment.gradingLateAssignments = gradingLateAssignments
+
+  //assignment.grade("scratch/Jordan_Diane/International Business.docx")
+  //listScores.each { println it }
+  //if (true) return
 
   // This will download the file and leave the thinger open
   aiu = new Aiu(course: course, assignment: assignment.assignmentName)
   aiu.navigateToGradingPage()
+  if (aiu.notOnGradingPage) {
+    System.exit(0)
+  }
   aiu.loadUserRows()
+
+//  aiu.userRows?.each {
+//    println(it.scoreSummary())
+//  }
   aiu.downloadZip()
 
   files = processDownload(scratchDirName, aiu.zipFile)
@@ -135,21 +153,13 @@ public void populateGuiWithNextUser(boolean skipUser) {
     assignment.grade(fileToGrade)
     fileText.text = assignment.displayText
 
-    // first set the special scores
-    def pointsOff = getPointsOff(listScores)
-    if (!pointsOff) {
-      listScores[listScores.size()-1].enabled = true
-    } else if (pointsOff < 26) {
-      listScores[listScores.size()-2].enabled = true
-    }
-
     listScores.eachWithIndex { ScoreDefinition score, int i ->
       toggles[i].selected = score.enabled
     }
   }
 
   def processCurrentUser() {
-    currentUser?.setScore(assignment.maxScore - getPointsOff(listScores))
+    currentUser?.setScore(assignment.maxScore - assignment.getPointsOff(listScores))
     currentUser?.setComments(listScores.findAll({it.enabled})*.text.join(" "))
   }
 
@@ -209,8 +219,31 @@ def processDownload(String scratchDirName, String zipFileName) {
     }
   }
 
-  def getPointsOff(def scores) {
-    def pointsOff = scores.findAll({it.enabled})*.score.sum()
-    pointsOff ? pointsOff : 0
+  def loadLastCourseChosen() {
+    def file = new File("lastChosenCourse.txt")
+    return file.exists() ? file.text : "Enter the course"
+  }
+
+  def recordCourseIfDifferent(String course, String lastCourseChosen) {
+    if (course != lastCourseChosen) {
+      def file = new File("lastChosenCourse.txt")
+      if (file.exists()) { file.delete() }
+      new FileOutputStream(file).write(course.bytes)
+    }
+  }
+
+  def chooseAssignment(String assign) {
+    // have to compile for this to work
+    //assignment = Class.forName(args[1]).newInstance()
+    // can't do this one either...class is diff classloader and won't work in java
+    //assignment = Eval.me("new x.assignments."+ args[1] +"()")
+    switch (assign) {
+      case "Assignment1": return new Assignment1()
+      case "Assignment2": return new Assignment2()
+      //case "Assignment3": return new Assignment3()
+      case "Assignment4": return new Assignment4()
+      case "Assignment5": return new Assignment5()
+    }
+    return null
   }
 }

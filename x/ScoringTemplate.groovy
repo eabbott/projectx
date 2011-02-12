@@ -18,15 +18,32 @@ public abstract class ScoringTemplate {
   // This field is not re-initialized
   List<ScoreDefinition> scoreDefinitions
   protected abstract loadScoreDefinitions()
-  public ScoringTemplate() { scoreDefinitions = loadScoreDefinitions() }
+  public ScoringTemplate()
+    { scoreDefinitions = lineUpScoreDefinitions(loadScoreDefinitions()) }
+
+  // common scoring items + page sizes
+  int minWords = 750, maxWords = 1250
+  boolean gradingLateAssignments = false
+  List<ScoreDefinition> commonScoreDefinitions = [
+    new ScoreDefinition(5, "There was no APA cover page (-5 points).", { }),
+    new ScoreDefinition(5, "There was no APA reference page (-5 points).", { !references }),
+    new ScoreDefinition(5, "Paper did not meet 3-5 pages guidelines, not including cover or reference pages (-5 points).", { contentTooLong() }),
+    new ScoreDefinition(5, "There was no abstract or APA reference (-5 points).", { !references }),
+    new ScoreDefinition(5, "References were not in proper APA format, ie, alphabetized (-5 points).", { references && !referencesSorted() }),
+    new ScoreDefinition(5, "Content was far too brief (-5 points).", { contentTooBrief() }),
+    new ScoreDefinition(125, "Prohibited sites were used, therefore no credit is given.", { checkForProhibitedSites() }),
+    new ScoreDefinition(10, "There are many misspellings or grammatical errors (-10 points).", { checkSpelling() }),
+    new ScoreDefinition(5, "Paper was submitted late (-5 points).", { }, ScoreDefinition.LATE),
+    //new ScoreDefinition(0, "That said, the content was enjoyable to read.", { }, ScoreDefinition.ENJOYED),
+  ]
 
   // These are transient and re-initialized for each user/paper
-  int maxScore
+  int maxScore = 125
   String text
   String displayText
   List paragraphs
   List references
-  List prohibitedSites
+  List prohibitedSites = ["wikipedia.com", "wikipedia.org"]
   boolean invalidFile
 
   public void grade(String filename) {
@@ -45,6 +62,15 @@ public abstract class ScoringTemplate {
 
     // run the scoring
     scoreDefinitions.each { it.runAction() }
+
+    // now set the special scores
+    scoreDefinitions.find{it.scoreType==ScoreDefinition.LATE}?.enabled = gradingLateAssignments
+    def pointsOff = getPointsOff(scoreDefinitions)
+    if (!pointsOff) {
+      scoreDefinitions.find{it.scoreType==ScoreDefinition.PERFECT}?.enabled = true
+    } else if (pointsOff < 26) {
+      scoreDefinitions.find{it.scoreType==ScoreDefinition.ENJOYED}?.enabled = true
+    }
   }
 
   public void clearScores() {
@@ -67,12 +93,12 @@ public abstract class ScoringTemplate {
     return findIndexOf(references.join(" ").toLowerCase(), prohibitedSites)
   }
 
-  public boolean contentTooBrief(int minWords) {
+  public boolean contentTooBrief() {
     int words = text.split().size() - 30 // subtract 30 for title page
     words < minWords
   }
 
-  public boolean contentTooLong(int maxWords) {
+  public boolean contentTooLong() {
     int words = text.split().size() - 30 // subtract 30 for title page
     words > maxWords
   }
@@ -170,5 +196,19 @@ public abstract class ScoringTemplate {
 
   boolean isStartOfReferences(String text) {
     text?.equalsIgnoreCase("references") || text?.equalsIgnoreCase("references:")
+  }
+
+  def getPointsOff(def scores) {
+    def pointsOff = scores.findAll({it.enabled})*.score.sum()
+    pointsOff ? pointsOff : 0
+  }
+
+  def lineUpScoreDefinitions(def customDefinitions) {
+    def list = []
+    list.addAll(customDefinitions.findAll{it.scoreType == null})
+    list.addAll(commonScoreDefinitions.findAll{it.scoreType == null})
+    list.addAll(commonScoreDefinitions.findAll{it.scoreType != null})
+    list.addAll(customDefinitions.findAll{it.scoreType != null})
+    return list
   }
 }
