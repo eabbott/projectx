@@ -192,7 +192,8 @@ public abstract class ScoringTemplate {
   }
 
   boolean isStartOfReferences(String text) {
-    text?.equalsIgnoreCase("references") || text?.equalsIgnoreCase("references:")
+    text?.equalsIgnoreCase("references") || text?.equalsIgnoreCase("references:") ||
+    text?.equalsIgnoreCase("reference") || text?.equalsIgnoreCase("reference:")
   }
 
   def getPointsOff(def scores) {

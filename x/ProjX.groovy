@@ -22,7 +22,7 @@ def fileChooser
 def skipUserPanel
 def fileText
 def toggles
-def assignments = ["Assignment1","Assignment2","Assignment3","Assignment4","Assignment5"]
+def assignments = ["Assignment1","Assignment2","Assignment4","Assignment5"]
 def lastCourseChosen
 
 public void main(String[] args) {
@@ -91,6 +91,7 @@ public void populateGuiWithNextUser(boolean skipUser) {
       sb.append(it.scoreSummary()).append("\n")
     }
     fileText.text = sb.toString()
+    writeScoresToDisk(fileText.text)
 
     def finishPanel = swing.button(text: "Post Grades", actionPerformed: {postGrades()})
     fileChooser.getComponent().removeAll()
@@ -245,5 +246,11 @@ def processDownload(String scratchDirName, String zipFileName) {
       case "Assignment5": return new Assignment5()
     }
     return null
+  }
+
+  def writeScoresToDisk(String scoreSummary) {
+    def file = new File(course +"-"+ assignment.assignmentName +".txt")
+    if (file.exists()) { file.delete() }
+    new FileOutputStream(file).write(scoreSummary.bytes)
   }
 }
