@@ -8,12 +8,14 @@ import com.swabunga.spell.engine.SpellDictionaryHashMap
 
 
 public abstract class ScoringTemplate {
+  /*
   static SpellChecker spellChecker = new SpellChecker()
   static {
     //InputStream is = getClass().getResourceAsStream("dict/english.0");
     //spellChecker.addDictionary(new SpellDictionaryHashMap(new InputStreamReader(is)));
     spellChecker.addDictionary(new SpellDictionaryHashMap(new File("dict/english.0")))
   }
+  */
 
   // This field is not re-initialized
   List<ScoreDefinition> scoreDefinitions
@@ -108,6 +110,9 @@ public abstract class ScoringTemplate {
   }
 
   public boolean checkSpelling() {
+    // disable the spell checker, it sucks
+    return false
+    /*
     int badWords = 0
     text.split().each { it
       if (!spellChecker.isCorrect(modifyWord(it.trim()))) {
@@ -116,6 +121,7 @@ public abstract class ScoringTemplate {
       }
     }
     badWords > 10
+    */
   }
 
   protected String modifyWord(String word) {
