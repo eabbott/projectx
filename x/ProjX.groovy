@@ -4,6 +4,7 @@ import java.util.zip.ZipEntry
 import x.assignments.*
 
 public class ProjX {
+def lineSeparator = System.getProperty("line.separator")
 
 String scratchDirName = "scratch"
 def assignment, course
@@ -88,7 +89,7 @@ public void populateGuiWithNextUser(boolean skipUser) {
     // show the scores
     StringBuffer sb = new StringBuffer(16*1024)
     aiu.userRows?.each {
-      sb.append(it.scoreSummary()).append("\n")
+      sb.append(it.scoreSummary()).append(lineSeparator)
     }
     fileText.text = sb.toString()
     writeScoresToDisk(fileText.text)
@@ -251,6 +252,7 @@ def processDownload(String scratchDirName, String zipFileName) {
   def writeScoresToDisk(String scoreSummary) {
     def file = new File(course +"-"+ assignment.assignmentName +".txt")
     if (file.exists()) { file.delete() }
+    println "For backup purposes writing the grades to file: "+ file.name
     new FileOutputStream(file).write(scoreSummary.bytes)
   }
 }

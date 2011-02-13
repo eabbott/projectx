@@ -35,7 +35,11 @@ public class Aiu {
   }
 
   public void postAllGrades() {
-    println "we are finished. not yet auto-posting grades though "
+    println "The grades are currently being posted, please wait patiently"
+    page = (form.getElementsByTagName("input").find
+                 { it.getAttribute("value") == "Post Grades for Class" }).click()
+    println "The grades have been posted, shutting down."
+    System.exit(0)
   }
 
   public void navigateToGradingPage() {
