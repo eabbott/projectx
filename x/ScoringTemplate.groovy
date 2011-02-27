@@ -86,9 +86,12 @@ public abstract class ScoringTemplate {
 
   public boolean referencesSorted() {
     def unsorted = references.findAll({it && !it.isAllWhitespace()})
-                             .collect { findReferenceSortableString(it) }
-    def sorted = unsorted.findAll {true}.sort(String.CASE_INSENSITIVE_ORDER)
-    sorted.equals(unsorted)
+    if (unsorted) {
+      unsorted = unsorted.collect { findReferenceSortableString(it) }
+      def sorted = unsorted.findAll {true}.sort(String.CASE_INSENSITIVE_ORDER)
+      return sorted.equals(unsorted)
+    }
+    return true
   }
 
   public boolean checkForProhibitedSites() {
