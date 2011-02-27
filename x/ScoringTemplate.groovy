@@ -85,7 +85,10 @@ public abstract class ScoringTemplate {
   }
 
   public boolean referencesSorted() {
-    references == references.sort()
+    def unsorted = references.findAll({it && !it.isAllWhitespace()})
+                             .collect { findReferenceSortableString(it) }
+    def sorted = unsorted.findAll {true}.sort(String.CASE_INSENSITIVE_ORDER)
+    sorted.equals(unsorted)
   }
 
   public boolean checkForProhibitedSites() {
@@ -214,5 +217,12 @@ public abstract class ScoringTemplate {
     list.addAll(commonScoreDefinitions.findAll{it.scoreType != null})
     list.addAll(customDefinitions.findAll{it.scoreType != null})
     return list
+  }
+
+  def String findReferenceSortableString(String s) {
+    char[] oldChars = s.getChars()
+    int i=0
+    for (; i < oldChars.length && !Character.isLetterOrDigit(oldChars[i]); i++);
+    return i < oldChars.length ? new String(oldChars, i, oldChars.length-i) : s
   }
 }

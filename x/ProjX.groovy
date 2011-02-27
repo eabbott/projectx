@@ -27,6 +27,13 @@ def assignments = ["Assignment1","Assignment2","Assignment4","Assignment5"]
 def lastCourseChosen
 
 public void main(String[] args) {
+  if (args && args.length == 3 && args[0] == "-g") {
+    assignment = chooseAssignment(args[1])
+    listScores = assignment.getScoreDefinitions()
+    assignment.grade(args[2])
+    listScores.each { println it }
+    return
+  }
 
   lastCourseChosen = loadLastCourseChosen()
   argsGui = new ArgsGui(this, lastCourseChosen, assignments)
