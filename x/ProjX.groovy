@@ -52,10 +52,6 @@ def continueWithArguments() {
   listScores = assignment.getScoreDefinitions()
   assignment.gradingLateAssignments = gradingLateAssignments
 
-  //assignment.grade("scratch/Jordan_Diane/International Business.docx")
-  //listScores.each { println it }
-  //if (true) return
-
   // This will download the file and leave the thinger open
   aiu = new Aiu(course: course, assignment: assignment)
   aiu.navigateToGradingPage()
@@ -88,7 +84,16 @@ public void populateGuiWithNextUser(boolean skipUser) {
   if (currentUser && !skipUser) {
     processCurrentUser()
   }
-  currentUser = aiu.getNextUserRow()
+
+  // find a user with files to grade
+  while ((currentUser=aiu.getNextUserRow()) != null &&
+         !(userFileNames=getFileNames(files, currentUser.fname, currentUser.lname)))
+  {
+println "setting score to 0: currentUser="+ currentUser
+    currentUser?.setScore(ScoringTemplate.NOT_SUBMITTED_SCORE)
+    currentUser?.setComments(ScoringTemplate.NOT_SUBMITTED_COMMENTS)
+  }
+
   if (!currentUser) {
     // put in finish button or something
     userNameLabel.text = ""
@@ -113,7 +118,6 @@ public void populateGuiWithNextUser(boolean skipUser) {
     return
   }
 
-  userFileNames = getFileNames(files, currentUser.fname, currentUser.lname)
   userNameLabel.text = currentUser.fname +" "+ currentUser.lname
   assignment.clearScores()
   listScores.eachWithIndex { ScoreDefinition score, int i ->

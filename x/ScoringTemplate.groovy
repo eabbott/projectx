@@ -8,6 +8,8 @@ import com.swabunga.spell.engine.SpellDictionaryHashMap
 
 
 public abstract class ScoringTemplate {
+  public static int NOT_SUBMITTED_SCORE = 0
+  public static String NOT_SUBMITTED_COMMENTS = 'No assignment was submitted, ergo no credit is given.'
   /*
   static SpellChecker spellChecker = new SpellChecker()
   static {
@@ -85,7 +87,8 @@ public abstract class ScoringTemplate {
   }
 
   public boolean referencesSorted() {
-    def unsorted = references.findAll({it && !it.isAllWhitespace()})
+    def unsorted = references.findAll({it && !it.trim().isAllWhitespace()})
+    unsorted = concatReferences(unsorted)
     if (unsorted) {
       unsorted = unsorted.collect { findReferenceSortableString(it) }
       def sorted = unsorted.findAll {true}.sort(String.CASE_INSENSITIVE_ORDER)
@@ -157,7 +160,7 @@ public abstract class ScoringTemplate {
       if (isStartOfReferences(it.getParagraphText()?.trim())) {
         inReferences = true
       } else if (inReferences) {
-        references << it.getParagraphText()?.trim()
+        references << it.getParagraphText()
       } else {
         paragraphs << it.getParagraphText()
         sb.append(" ").append(it.getParagraphText()?.trim())
@@ -170,23 +173,27 @@ public abstract class ScoringTemplate {
   def parseDoc(String filename) {
     def fs = new POIFSFileSystem(new FileInputStream(filename));
     HWPFDocument doc = new HWPFDocument(fs);
-    displayText = doc.getRange().text()
     org.apache.poi.hwpf.usermodel.Range range = doc.getRange();
 
     boolean inReferences = false
     StringBuffer sb = new StringBuffer(32*1024)
+    StringBuffer sbDisplay = new StringBuffer(32*1024)
     for (int i=0; i < range.numParagraphs(); i++) {
       String text = range.getParagraph(i).text()
       if (isStartOfReferences(text?.trim())) {
         inReferences = true
+        sbDisplay.append("\n").append(text?.trim()).append("\n")
       } else if (inReferences) {
-        references << text?.trim()
+        references << text
+        sbDisplay.append("\n").append(text)
       } else {
         paragraphs << text
         sb.append(" ").append(text?.trim())
+        sbDisplay.append("\n").append(text)
       }
     }
     text = sb.toString()
+    displayText = sbDisplay.toString()
   }
 
   private boolean findMatch(String text, List words) {
@@ -227,5 +234,18 @@ public abstract class ScoringTemplate {
     int i=0
     for (; i < oldChars.length && !Character.isLetterOrDigit(oldChars[i]); i++);
     return i < oldChars.length ? new String(oldChars, i, oldChars.length-i) : s
+  }
+
+  def List concatReferences(List refs) {
+    if (!refs || refs.size() < 2) { return refs }
+
+    def newRefs = []
+    for (int i=0; i < refs.size(); i++ ) {
+      // throw the shit away..we just care about alpha
+      if (!refs[i].startsWith("\t")) {
+        newRefs << refs[i]
+      }
+    }
+    newRefs
   }
 }
