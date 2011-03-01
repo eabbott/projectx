@@ -36,6 +36,10 @@ public class Aiu {
 
   public void postAllGrades() {
     println "The grades are currently being posted, please wait patiently"
+    form = page.getFormByName("aspnetForm")
+    //form.getElementsByTagName("input").each { println it }
+    //println "this thinger -> "+ (form.getElementsByTagName("input").find
+    //             { it.getAttribute("value") == "Post Grades for Class" })
     page = (form.getElementsByTagName("input").find
                  { it.getAttribute("value") == "Post Grades for Class" }).click()
     println "The grades have been posted, shutting down."
