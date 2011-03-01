@@ -89,7 +89,6 @@ public void populateGuiWithNextUser(boolean skipUser) {
   while ((currentUser=aiu.getNextUserRow()) != null &&
          !(userFileNames=getFileNames(files, currentUser.fname, currentUser.lname)))
   {
-println "setting score to 0: currentUser="+ currentUser
     currentUser?.setScore(ScoringTemplate.NOT_SUBMITTED_SCORE)
     currentUser?.setComments(ScoringTemplate.NOT_SUBMITTED_COMMENTS)
   }
