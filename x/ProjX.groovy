@@ -27,11 +27,17 @@ def assignments = ["Assignment1","Assignment2","Assignment4","Assignment5"]
 def lastCourseChosen
 
 public void main(String[] args) {
+  // ./launch.sh -g Assignment4 tscratch/Guy_Tammy/Tammy.guyUnit4IP.docx
   if (args && args.length == 3 && args[0] == "-g") {
     assignment = chooseAssignment(args[1])
     listScores = assignment.getScoreDefinitions()
     assignment.grade(args[2])
     listScores.each { println it }
+    return
+  // ./launch.sh -unzip tscratch ~/Downloads/Assignments.zip
+  } else if (args && args.length == 3 && args[0] == "-unzip") {
+    files = processDownload(args[1], args[2])
+    files.each { println it }
     return
   }
 
@@ -188,14 +194,20 @@ def processDownload(String scratchDirName, String zipFileName) {
   scratchDir.mkdir()
   def zipFile = new java.util.zip.ZipFile(new File(zipFileName))
 
-  zipFile.entries().each { ZipEntry entry ->
-    if (entry.isDirectory()) {
-      mkdirIfDoesntExist(scratchDirName, entry.name)
-    } else {
-      mkdirIfDoesntExist(scratchDirName, entry.name.split("/")[0])
-      File file = new File(scratchDirName + File.separator + entry.name)
-      files << file.absolutePath
+  zipFile.entries().findAll { !it.isDirectory() }.each { ZipEntry entry ->
+    mkdirIfDoesntExist(scratchDirName, entry.name.split("/")[0])
+    File file = new File(scratchDirName + File.separator + entry.name)
+    println "doing entry: "+ entry
+    try {
       new FileOutputStream(file).write(zipFile.getInputStream(entry).getBytes())
+      files << file.absolutePath
+    } catch (Exception e) {
+      // filenames with non-english characters can barf
+      String err = "File could not be pulled out of zipfile, there is a jdk bug. "+
+           "Please open the file "+ file.absolutePath +" and grade accordingly."
+      new FileOutputStream(file).write(err.getBytes())
+      files << file.absolutePath
+      println err
     }
   }
   files
