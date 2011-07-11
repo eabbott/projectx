@@ -48,6 +48,7 @@ public void main(String[] args) {
 }
 
 def continueWithArguments() {
+  Log.debug("continuingWithArguments")
   course = swing.getVariable("course")?.text
   recordCourseIfDifferent(course, lastCourseChosen)
   def assignmentString = swing.getVariable("assignmentChooser")?.selectedItem
@@ -69,6 +70,7 @@ def continueWithArguments() {
 //  aiu.userRows?.each {
 //    println(it.scoreSummary())
 //  }
+  Log.debug "downloading zip file"
   aiu.downloadZip()
 
   files = processDownload(scratchDirName, aiu.zipFile)

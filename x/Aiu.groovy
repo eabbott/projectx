@@ -47,19 +47,25 @@ public class Aiu {
   }
 
   public void navigateToGradingPage() {
+    Log.debug("navigatingToGradingPage")
     web = new WebClient()
     web.setThrowExceptionOnScriptError(false)
+    web.setJavaScriptEnabled(false)
 
     login(web)
     page = login(web)
+    Log.debug("logged in")
 
     page = gotoCoursePageFromMainPage(
         page.getFrameByName("MainFrame").getEnclosedPage())
+    Log.debug("on course page")
     if (!page) {
+      Log.debug("not on grading page")
       notOnGradingPage = true
       return
     }
 
+    Log.debug("Posting grades by assignment")
     anchor = page.getAnchorByText("Post Grades by Assignment")
     page = anchor.click()
     form = page.getFormByName("aspnetForm")
@@ -67,13 +73,20 @@ public class Aiu {
     HtmlOption option = select.getOptionByText(assignment.assignmentName)
     option.setSelected(true)
     page = select.setSelectedAttribute(option, true)
+    web.setJavaScriptEnabled(true)
     page = (form.getElementsByTagName("input").find
                  { it.getAttribute("value") == "Select" }).click()
+    //web.setJavaScriptEnabled(true)
   }
 
   public void downloadZip() {
+    Log.debug("downloading zip")
     anchor = page.getAnchorByText("Download All Files")
+    Log.debug("downloading zip -- anchor: "+ anchor.getClass().getName())
+    Log.debug("downloading zip -- web.getJavaScriptEnabled="+ web.javaScriptEnabled)
     def downloadedPage = anchor.click()
+    Log.debug("downloading zip -- saving: "+ downloadedPage.getClass().getName())
+    //downloadedPage.save(new File("gonnaDownload.html"))
     new FileOutputStream(zipFile).write(downloadedPage.getInputStream().getBytes())
   }
 
@@ -102,6 +115,7 @@ public class Aiu {
   }
 
   public HtmlPage login(WebClient web) {
+    Log.debug("logging in to site")
     loginPage = web.getPage(loginUrl)
     form = loginPage.getFormByName("aspnetForm")
     def tags = form.getElementsByTagName("input")
@@ -125,6 +139,7 @@ public class Aiu {
   }
 
   HtmlPage gotoCoursePageFromMainPage(HtmlPage mainPage) {
+    Log.debug("gotoCoursePageFromMainPage")
     def courses = []
     tags = mainPage.getAnchors()
     HtmlElement courseLink
